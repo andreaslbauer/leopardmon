@@ -4,7 +4,7 @@
 import logging
 import os
 
-from target import testtarget
+from leopardmontarget import testtarget
 
 
 def main():
