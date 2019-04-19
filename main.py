@@ -19,12 +19,13 @@ def main():
     logging.info("Working directory is %s", os.getcwd())
 
     code = """
-print('Hello Japan')
+response = requests.get(self.url)
+print("HTTP Status Code: ", response.status_code)
     """
-
+    url = "https://media.cellsignal.com/api/products/4060?country=JP"
 
     targetInfo = testtarget.TargetInfo("Japan Inventory and Pricing Microservice",
-                code, "Executing test code for: %s", self.name)
+                code, url)
     targetInfo.executeTest()
 
 main()
