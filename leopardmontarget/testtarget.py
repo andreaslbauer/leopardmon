@@ -7,6 +7,15 @@ import json
 # logging facility: https://realpython.com/python-logging/
 import logging
 
+from couchdb.mapping import Document, TextField, IntegerField, DateTimeField
+import couchdb
+
+
+class TargetInfoDOA(Document):
+    name = TextField()
+    testCode = TextField()
+    lastStatus = IntegerField()
+    url = TextField()
 
 class TargetInfo:
 
@@ -23,6 +32,16 @@ class TargetInfo:
         self.testCode = testCode
         self.lastStatus = 0
         self.url = url
+
+    def store(self):
+
+        # get the couchDB server and instance
+        couchDBserver = couchdb.Server()
+        couchDB = couchDBserver['leopardmon-testtargets']
+
+        targetInfoDOA = TargetInfoDOA(name = self.name, testCode = self.testCode,
+                                      lastStatus = self.lastStatus, url = self.url)
+        targetInfoDOA.store(couchDB)
 
     # execute the check
     def executeTest(self):
@@ -41,20 +60,24 @@ class TargetInfo:
         try:
             exec(code)
 
-
-
         except Exception as e:
             logging.error("Error when executing code: %s", self.testCode)
             logging.error(e)
+            self.lastStatus = 1
 
         else:
 
             logging.info("Test code outout: %s", codeOut.getvalue())
             logging.info("Test code errors: %s", codeErr.getvalue())
+            self.lastStatus = 0
 
         finally:
 
             # restore stdout and stderr
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
+
+
+
+
 
