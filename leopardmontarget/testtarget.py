@@ -4,7 +4,7 @@ import io
 import requests
 import json
 import datetime
-
+from mailhelper import mailhelper
 # logging facility: https://realpython.com/python-logging/
 import logging
 import pycouchdb
@@ -13,11 +13,13 @@ import pycouchdb
 class TargetInfo:
 
     # common constructor - initialize variables
-    def __init__(self, name = "", testCode = "", url = ""):
+    def __init__(self, name = "", testCode = "", url = "", runInterval = 30):
         self.name = name
         self.testCode = testCode
         self.lastStatus = 0
         self.url = url
+        self.runInterval = runInterval
+        self.runCountdown = 0
         self._id = name
 
     # class method - create from value dict
@@ -49,7 +51,7 @@ class TargetInfo:
             pass
 
         doc = couchDB.save(self.__dict__)
-        logging.info("Stored record %s", doc)
+        logging.info("Stored target info record: %s", doc)
 
     # execute the check
     def executeTest(self):
@@ -77,6 +79,8 @@ class TargetInfo:
         except Exception as e:
             logging.error("Error when executing check: %s", self.name)
             logging.error(e)
+            body = self.name + "\r\n" + str(e)
+            mailhelper.sendMail("andreas.bauer@cellsignal.com", "Webproperty Monitor Alert", body)
             self.lastStatus = 1
 
         else:
@@ -100,6 +104,10 @@ class TargetInfo:
 
         logging.info("Executed check %s in %i ms with status %i", self.name, elapsedtime, self.lastStatus)
 
+        # store the results
+        testResult = TestResult.updateTestResults(self, status, lastTimeElapsed = elapsedtime)
+        testResult.store()
+
 class TargetInfoDict :
 
     # default constructor- create empty object
@@ -112,7 +120,7 @@ class TargetInfoDict :
         return self.targetInfos.__len__()
 
     # load the target info records from the CouchDB
-    def loadFromDB(self):
+    def loadFromDB(self) -> object:
 
         # get the database
         couchDBServer = pycouchdb.Server()
@@ -147,7 +155,76 @@ class TargetInfoDict :
             self.targetInfos[targetInfo.name] = targetInfo
 
 
+class TestResult:
 
+    # common constructor - initialize variables
+    def __init__(self, name = "", url = "", lastTested = None, lastStatus = 0, lastSuccess = None, lastFailure = None, lastTimeElapsed = 0):
+        self.name = name
+        self.url = url
+        self.lastTested = None
+        self.lastStatus = 0
+        self.lastSuccess = None
+        self.lastFailure = None
+        self.lastTimeElapsed = lastTimeElapsed
+        self._id = name
+        self.results = list()
+
+    def store(self):
+        # get the couchDB server and instance
+        # initialize global variable couch DB
+
+        # create the couchdb instance - if it doesn't exist yet
+        couchDBServer = pycouchdb.Server()
+        couchDB = couchDBServer.database("leopardmon-testresults")
+
+        try:
+            doc = None
+            try:
+                doc = couchDB.get(self.name)
+                self._rev = doc["_rev"]
+            except:
+                pass
+
+        except pycouchdb.exceptions.NotFound as e:
+            pass
+
+        # update the date/time stamps
+        now = datetime.datetime.now()
+        nowDateTimeStr = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        self.lastTested = nowDateTimeStr
+        if (self.lastStatus > 0):
+            self.lastFailure = nowDateTimeStr
+
+        else:
+            self.lastSuccess = nowDateTimeStr
+
+        resultTuple = {}
+        resultTuple["datetime"] = nowDateTimeStr
+        resultTuple["status"] = self.lastStatus
+        resultTuple["timeelapsed"] = self.lastTimeElapsed
+
+        results = list()
+        results.append(resultTuple)
+        if (doc != None):
+            results = results + doc["results"][0:63]
+
+        self.results = results
+
+        doc = couchDB.save(self.__dict__)
+        logging.info("Stored test results record: %s", doc)
+
+    # class method - create and store test results
+    @classmethod
+    def updateTestResults(cls, testTarget, status, lastTimeElapsed):
+        clsinstance = cls()
+        clsinstance.lastStatus = status
+        clsinstance.name = testTarget.name
+        clsinstance._id = testTarget.name
+        clsinstance.url = testTarget.url
+        clsinstance.lastTimeElapsed = lastTimeElapsed
+
+        return clsinstance
 
 
 
