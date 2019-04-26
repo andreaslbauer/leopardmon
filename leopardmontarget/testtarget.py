@@ -24,7 +24,7 @@ class TargetInfo:
         self.testCode = testCode
         self.lastStatus = 0
         self.url = url
-        self._id = name + "-" + url
+        self._id = name
 
     def store(self):
 
@@ -35,13 +35,10 @@ class TargetInfo:
         couchDBServer = pycouchdb.Server()
         couchDB = couchDBServer.database("leopardmon-testtargets")
 
-        # update our _id
-        self._id = self.name + ":" + self.url
-
         try:
             doc = None
             try:
-                doc = couchDB.get(self._id)
+                doc = couchDB.get(self.name)
                 self._rev = doc["_rev"]
             except:
                 pass
@@ -85,6 +82,36 @@ class TargetInfo:
             # restore stdout and stderr
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
+
+class TargetInfoDict :
+
+    # default constructor- create empty object
+    def __init__(self):
+        self.targetInfos = {}
+
+    # load the target info records from the CouchDB
+    def loadFromDB(self):
+
+        # get the database
+        couchDBServer = pycouchdb.Server()
+        couchDB = couchDBServer.database("leopardmon-testtargets")
+
+        _viewdoc = {
+            "_id": "listview",
+            "views": {
+                "names": {
+                    "map": "function(doc) { emit(doc.name, 1); }",
+                    "reduce": "function(k, v) { return  sum(v); }",
+                    }
+                }
+            }
+
+        viewdoc = couchDB.save(_viewdoc)
+        docs = couchDB.query("listview", group='true')
+
+        for doc in docs:
+            print(doc)
+
 
 
 
