@@ -10,12 +10,16 @@ from leopardmontarget import testtarget
 # create a sample test target object
 def createSampleTestTargets() :
     code = """
-    response = requests.get(self.url)
-    print("HTTP Status Code: ", response.status_code)
-        """
-    url = "https://media.cellsignal.com/api/products/4060?country=JP"
+response = requests.get(self.url)
+print("HTTP Status Code: ", response.status_code, end='')
+if (response.status_code == 200):
+    status = 0
+else:
+    status = 1
 
-    targetInfo = testtarget.TargetInfo("Japan Inventory and Pricing Microservice",
+"""
+    url = "https://media.cellsignal.com/api/products/4060?country=JP"
+    targetInfo = testtarget.TargetInfo("Japan Inventory and Pricing Microservice - SKU4060",
                                        code, url)
     return targetInfo
 
@@ -48,9 +52,12 @@ def main():
     targetInfos = testtarget.TargetInfoDict()
     targetInfos.loadFromDB()
 
-    #targetInfo.executeTest()
-    #targetInfo.store()
+    if (targetInfos.len == 0):
+        targetInfo = createSampleTestTargets()
+        targetInfo.store()
 
-    #targetInfo.store()
+    # loop through all targetinfo's and execute their tests
+    for key, value in targetInfos.targetInfos.items():
+        value.executeTest()
 
 main()
