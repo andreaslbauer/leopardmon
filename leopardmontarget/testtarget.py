@@ -6,16 +6,8 @@ import json
 
 # logging facility: https://realpython.com/python-logging/
 import logging
+import pycouchdb
 
-from couchdb.mapping import Document, TextField, IntegerField, DateTimeField
-import couchdb
-
-
-class TargetInfoDOA(Document):
-    name = TextField()
-    testCode = TextField()
-    lastStatus = IntegerField()
-    url = TextField()
 
 class TargetInfo:
 
@@ -32,16 +24,33 @@ class TargetInfo:
         self.testCode = testCode
         self.lastStatus = 0
         self.url = url
+        self._id = name + "-" + url
 
     def store(self):
 
         # get the couchDB server and instance
-        couchDBserver = couchdb.Server()
-        couchDB = couchDBserver['leopardmon-testtargets']
+        # initialize global variable couch DB
 
-        targetInfoDOA = TargetInfoDOA(name = self.name, testCode = self.testCode,
-                                      lastStatus = self.lastStatus, url = self.url)
-        targetInfoDOA.store(couchDB)
+        # create the couchdb instance - if it doesn't exist yet
+        couchDBServer = pycouchdb.Server()
+        couchDB = couchDBServer.database("leopardmon-testtargets")
+
+        # update our _id
+        self._id = self.name + ":" + self.url
+
+        try:
+            doc = None
+            try:
+                doc = couchDB.get(self._id)
+                self._rev = doc["_rev"]
+            except:
+                pass
+
+        except pycouchdb.exceptions.Conflict as e:
+            pass
+
+        doc = couchDB.save(self.__dict__)
+        logging.info("Stored record %s", doc)
 
     # execute the check
     def executeTest(self):

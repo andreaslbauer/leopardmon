@@ -3,7 +3,7 @@
 # logging facility: https://realpython.com/python-logging/
 import logging
 import os
-import couchdb
+import pycouchdb
 
 from leopardmontarget import testtarget
 
@@ -21,16 +21,16 @@ def main():
 
 
     # create the couchdb instance - if it doesn't exist yet
-    couchDBserver = couchdb.Server()
-    couchDB = None
+    couchDBServer = pycouchdb.Server()
+    couchDB = couchDBServer.database("leopardmon-testtargets")
 
     try:
-        couchDB = couchDBserver['leopardmon-testtargets']
+
         logging.info("leopardmon-testargets DB successfully opened")
 
     except couchdb.http.ResourceNotFound as e:
         logging.info("leopardmon-testargets does not exist - create the DB")
-        couchDB = couchDBserver.create("leopardmon-testtargets")
+
 
     code = """
 response = requests.get(self.url)
@@ -39,10 +39,14 @@ print("HTTP Status Code: ", response.status_code)
     url = "https://media.cellsignal.com/api/products/4060?country=JP"
 
     targetInfo = testtarget.TargetInfo("Japan Inventory and Pricing Microservice",
-                code, url)
+                 code, url)
+
+    # read the target information records
+
 
     targetInfo.executeTest()
-
     targetInfo.store()
+
+    #targetInfo.store()
 
 main()
