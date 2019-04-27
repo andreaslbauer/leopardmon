@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h3>{% block title %}LeopoardMonitor Web Property Monitor - Monitor Log{% endblock %}</h3>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<pre>
+{{ lines }}
+</pre>
+
+{% endblock %}
+
