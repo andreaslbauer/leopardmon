@@ -1,11 +1,17 @@
-import os
-
 from flask import Flask
-
+import logging
+import os
+from . import auth
 
 def createapp(test_config = None):
+    # set up the logger
+    # logging.basicConfig(filename = "leopardapp.log", format='%(asctime)s %(levelname)s %(message)s',
+    #                    level=logging.INFO)
+
+    logging.info("Setting up Flask web app")
+
     # create and configure the app
-    app = Flask(__name__, instance_relative_config = True)
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
@@ -24,10 +30,15 @@ def createapp(test_config = None):
     except OSError:
         pass
 
+    logging.info("Setting up Flask routes")
+
     # a simple page that says hello
     @app.route('/')
     def home():
+        logging.info("HTTP GET for /")
         return 'Homepage!'
+
+    app.register_blueprint(auth.bp)
 
     return app
 
