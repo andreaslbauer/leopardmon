@@ -1,14 +1,8 @@
-#!/usr/bin/python3.6
-
-# logging facility: https://realpython.com/python-logging/
 import logging
 import os
 import pycouchdb
 import time
-import threading
-from mailhelper import mailhelper
-from leopardmontarget import testtarget
-
+from monitor import testtarget
 
 # create a sample test target object
 def createSampleTestTargets() :
@@ -97,6 +91,7 @@ def createDBDocumentsIfNeeded():
 # *******************************************************************
 
 def monitoringLoop():
+
     # log start up message
     logging.info("***************************************************************")
     logging.info("LeopardMon monitoring thread has started")
@@ -117,7 +112,7 @@ def monitoringLoop():
         assert isinstance(target.name, object)
         monitoringBody = monitoringBody + "\r\n" + target.name
 
-    mailhelper.sendMail("andreas.bauer@cellsignal.com", "Webproperty Monitor has started", monitoringBody)
+    #mailhelper.sendMail("andreas.bauer@cellsignal.com", "Webproperty Monitor has started", monitoringBody)
 
     # run forever
     while (True):
@@ -131,25 +126,4 @@ def monitoringLoop():
 
         time.sleep(60)
 
-
-# *******************************************************************
-# main program
-# *******************************************************************
-
-def main() -> object:
-
-    # set up the logger
-    logging.basicConfig(filename = "leopardmon.log", format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO)
-
-    # start the monitoring loop
-    threading.Thread(target=monitoringLoop().start())
-
-    # loop forever
-    while (True):
-        time.sleep(1)
-
-
-# run the main programm
-main()
 

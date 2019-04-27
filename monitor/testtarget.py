@@ -51,7 +51,7 @@ class TargetInfo:
             pass
 
         doc = couchDB.save(self.__dict__)
-        logging.info("Stored target info record: %s", doc)
+        #logging.info("Stored target info record: %s", doc)
 
     # execute the check
     def executeTest(self):
@@ -212,7 +212,7 @@ class TestResult:
         self.results = results
 
         doc = couchDB.save(self.__dict__)
-        logging.info("Stored test results record: %s", doc)
+        #logging.info("Stored test results record: %s", doc)
 
     # class method - create and store test results
     @classmethod
