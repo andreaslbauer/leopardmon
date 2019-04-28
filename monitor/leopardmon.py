@@ -40,6 +40,11 @@ else:
                                        code, url, runInterval = 10)
     targetInfo.store()
 
+    url = "http://cst-c.com.cn"
+    targetInfo = testtarget.TargetInfo("Homepage www.cst-c.com.cn",
+                                       code, url, runInterval = 10)
+    targetInfo.store()
+
 
 
     return targetInfo
