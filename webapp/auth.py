@@ -78,6 +78,7 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
