@@ -116,7 +116,6 @@ def createapp(test_config = None):
 
         return render_template('monitorlog.html', lines=lines)
 
-
     app.register_blueprint(auth.bp)
 
     return app

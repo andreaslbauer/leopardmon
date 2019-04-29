@@ -1,5 +1,6 @@
 import functools
 from dbhelper import dbaccess
+import logging
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -13,6 +14,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     if request.method == 'POST':
         username = request.form['username']
+        email = request.form['email']
+        organization = request.form['organization']
         password = request.form['password']
         error = None
 
@@ -26,7 +29,8 @@ def register():
                 error = 'User {} is already registered.'.format(username)
 
         if error is None:
-            dbaccess.dbPutUser(username, generate_password_hash(password))
+            dbaccess.dbPutUser(username, email, organization, generate_password_hash(password))
+            logging.info("Added user %s %s %s", username, email, organization)
             return redirect(url_for('auth.login'))
 
         flash(error)

@@ -33,13 +33,15 @@ def dbCreateIfNeeded():
         logging.info("leopardmon-users does not exist - create the DB")
 
 
-def dbPutUser(name, password):
+def dbPutUser(name, email, organization, password):
     couchDBServer = pycouchdb.Server()
     couchDB = couchDBServer.database("leopardmon-users")
 
     doc = {}
     doc["_id"] = name
     doc["name"] = name
+    doc["email"] = email
+    doc["organization"] = organization
     doc["password"] = password
 
     couchDB.save(doc)
