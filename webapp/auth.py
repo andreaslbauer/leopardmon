@@ -1,4 +1,5 @@
 import functools
+from dbhelper import dbaccess
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -13,24 +14,19 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        db = get_db()
         error = None
 
         if not username:
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
-        elif db.execute(
-            'SELECT id FROM user WHERE username = ?', (username,)
-        ).fetchone() is not None:
-            error = 'User {} is already registered.'.format(username)
+        else:
+            doc = dbaccess.dbGetUser(username)
+            if (doc != None):
+                error = 'User {} is already registered.'.format(username)
 
         if error is None:
-            db.execute(
-                'INSERT INTO user (username, password) VALUES (?, ?)',
-                (username, generate_password_hash(password))
-            )
-            db.commit()
+            dbaccess.dbPutUser(username, generate_password_hash(password))
             return redirect(url_for('auth.login'))
 
         flash(error)
@@ -43,21 +39,24 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        db = get_db()
+
         error = None
 
         # look up user in database
-        user = "andy"
+        doc = dbaccess.dbGetUser(username)
+        user = None
+        if (doc != None):
+            user = doc["name"]
 
         if user is None:
             error = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
+        elif not check_password_hash(doc['password'], password):
             error = 'Incorrect password.'
 
         if error is None:
             session.clear()
-            session['user_id'] = user['id']
-            return redirect(url_for('index'))
+            session['user_id'] = doc['name']
+            return redirect(url_for('home'))
 
         flash(error)
 

@@ -3,6 +3,7 @@ import os
 import pycouchdb
 import time
 from monitor import testtarget
+from dbhelper import dbaccess
 
 # create a sample test target object
 def createSampleTestTargets() :
@@ -55,30 +56,11 @@ else:
 # *******************************************************************
 
 def createDBDocumentsIfNeeded():
-    couchDB = None
-    couchDBServer = pycouchdb.Server()
-    try:
 
-        # create the couchdb instance - if it doesn't exist yet
-        couchDB = couchDBServer.database("leopardmon-testtargets")
-        logging.info("leopardmon-testargets DB successfully opened")
-
-    except pycouchdb.exceptions.NotFound as e:
-        couchDB = couchDBServer.create("leopardmon-testtargets")
-        logging.info("leopardmon-testargets does not exist - create the DB")
-
-    try:
-
-        # create the couchdb instance - if it doesn't exist yet
-        couchDB = couchDBServer.database("leopardmon-testresults")
-        logging.info("leopardmon-testresults DB successfully opened")
-
-    except pycouchdb.exceptions.NotFound as e:
-        couchDB = couchDBServer.create("leopardmon-testresults")
-        logging.info("leopardmon-testresults does not exist - create the DB")
+    # create databases as needed
+    dbaccess.dbCreateIfNeeded()
 
     # read the target information records
-
     targetInfos = testtarget.TargetInfoDict()
     targetInfos.loadFromDB()
 
