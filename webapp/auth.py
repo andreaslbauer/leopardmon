@@ -64,6 +64,8 @@ def login():
 
         flash(error)
 
+        logging.info("User logged in %s %s %s", doc["username"], doc["email"], doc["organization"])
+
     return render_template('auth/login.html')
 
 
